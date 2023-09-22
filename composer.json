@@ -2,7 +2,7 @@
     "name": "bloom-packages/permission-helper",
     "description": "permissions helper",
     "type": "library",
-    "homepage": "",
+    "homepage": "https://github.com/as245498513/perm.git",
     "autoload": {
         "psr-4": {
             "Bloom\\Permission\\": "src/"
