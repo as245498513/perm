@@ -3,6 +3,7 @@
     "description": "permissions helper",
     "type": "library",
     "homepage": "https://github.com/as245498513/perm.git",
+    "license": "MIT",
     "autoload": {
         "psr-4": {
             "Bloom\\Permission\\": "src/"
@@ -16,7 +17,7 @@
     "authors": [
         {
             "name": "meckel",
-            "email": "meckel@bloomchic.com"
+            "email": "meckel_cmj@163.com"
         }
     ],
     "require": {
