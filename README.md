@@ -3,7 +3,7 @@
 ## 安装
 
 ```
-composer require php-package/permission-helper
+composer require bloom-packages/permission-helper
 ```
 
 ## 配置

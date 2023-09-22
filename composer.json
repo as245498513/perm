@@ -1,8 +1,8 @@
 {
-    "name": "php-package/permission-helper",
+    "name": "bloom-packages/permission-helper",
     "description": "permissions helper",
     "type": "library",
-    "homepage": "https://gitlab.chicv.com/php-packages/request-logger",
+    "homepage": "",
     "autoload": {
         "psr-4": {
             "Bloom\\Permission\\": "src/"
