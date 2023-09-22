@@ -1,0 +1,33 @@
+{
+    "name": "php-package/permission-helper",
+    "description": "permissions helper",
+    "type": "library",
+    "homepage": "https://gitlab.chicv.com/php-packages/request-logger",
+    "autoload": {
+        "psr-4": {
+            "Bloom\\Permission\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests"
+        }
+    },
+    "authors": [
+        {
+            "name": "meckel",
+            "email": "meckel@bloomchic.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.2"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^2|^3",
+        "overtrue/phplint": "^2|^3|^4"
+    },
+    "scripts": {
+        "phpcs": "./vendor/bin/php-cs-fixer fix -v --diff --dry-run;",
+        "phpcs-fix": "./vendor/bin/php-cs-fixer fix -v;"
+    }
+}
