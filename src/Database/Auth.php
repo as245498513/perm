@@ -4,9 +4,6 @@ namespace Bloom\Permission\Database;
 
 use Bloom\Permission\Contracts\Auth as AuthContract;
 use Bloom\Permission\Enum\RoleEnum;
-use Exception;
-use Illuminate\Database\Query\Builder;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -40,16 +37,16 @@ class Auth extends Base implements AuthContract
 
     public function getKeys(array $roleIds): array
     {
-        $this->getAppId();
-
-        // todo 只查子系统的权限
-
-        return DB::connection($this->connection)
-            ->table('role_action_permissions')
-            ->whereIn('role_id', $roleIds)
-            ->pluck('resource_key')
+        $keys = DB::connection($this->connection)
+            ->table('role_action_permissions as rap')
+            ->leftJoin('resource as r', 'r.id', '=', 'rap.resource_id')
+            ->whereIn('rap.role_id', $roleIds)
+            ->where('r.app_id', $this->getAppId())
+            ->pluck('rap.resource_key')
             ->unique()
             ->toArray();
+
+        return $this->response->array($keys);
     }
 
     public function getDataPermissions(int $userId, int $menuId): array
@@ -59,21 +56,29 @@ class Auth extends Base implements AuthContract
         if ($isAdmin) {
             return $this->response->array([
                 'is_admin' => true,
-                'permissions' => [],
                 'settings' => []
             ]);
         }
 
-        $packageId = $this->getPackageId($userId);
-
         return $this->response->array([
             'is_admin' => false,
             'permissions' => $this->getPackagePermissions($packageId),
-            'settings' => $this->getPackageSettings($packageId, $menuId)
+            'settings' => $this->getPackageSettings($this->getPackageId($userId), $menuId)
         ]);
     }
 
-    private function getPackageSettings($packageId, $menuId): array
+    public function isAdmin($userId): bool
+    {
+        $roleIds = $this->getRoleIds($userId);
+
+        if ($this->isAdminRole($roleIds)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function getPackageSettings(int $packageId, int $menuId): array
     {
         $packageSetting = DB::connection($this->connection)
             ->table('package_settings')
@@ -82,7 +87,34 @@ class Auth extends Base implements AuthContract
             ->first();
 
         $packageSetting = (array)$packageSetting;
-        $this->multiFieldsToArray($packageSetting, ['attribute_range_value', 'time_range_value', 'job_range_value']);
+        $this->multiFieldsToArray($packageSetting);
+
+        $resourceMap = $this->getResourceField(
+            [
+                $packageSetting['attribute_range_resource_id'],
+                $packageSetting['time_range_resource_id'],
+                $packageSetting['job_range_resource_id']
+            ]);
+
+        $packageSetting['attribute_resource_field'] = $resourceMap[$packageSetting['attribute_range_resource_id']] ?? '';
+        $packageSetting['time_resource_field'] = $resourceMap[$packageSetting['time_range_resource_id']] ?? '';
+        $packageSetting['job_resource_field'] = $resourceMap[$packageSetting['job_range_resource_id']] ?? '';
+
+        return $packageSetting;
+    }
+
+    public function getUserPackageSetting(int $userId, int $menuId): array
+    {
+        $packageSetting = DB::connection($this->connection)
+            ->table('package_settings as ps')
+            ->leftJoin('user_packages as up', 'ps.package_id', '=', 'up.package_id')
+            ->where('up.user_id', $userId)
+            ->where('ps.menu_id', $menuId)
+            ->select(['ps.*'])
+            ->first();
+
+        $packageSetting = (array)$packageSetting;
+        $this->multiFieldsToArray($packageSetting);
         return $packageSetting;
     }
 
@@ -95,23 +127,11 @@ class Auth extends Base implements AuthContract
             ->toArray();
     }
 
-    private function getPackageId($userId): array
+    public function getPackageId($userId): int
     {
         return DB::connection($this->connection)
             ->table('user_packages')->where('user_id', $userId)
-            ->pluck('package_id')
-            ->toArray();
-    }
-
-    private function isAdmin($userId): bool
-    {
-        $roleIds = $this->getRoleIds($userId);
-
-        if ($this->isAdminRole($roleIds)) {
-            return true;
-        }
-
-        return false;
+            ->value('package_id');
     }
 
     private function isAdminRole($roleIds): bool
@@ -153,8 +173,9 @@ class Auth extends Base implements AuthContract
         return config('permission.app_id');
     }
 
-    private function multiFieldsToArray(&$array, $fields)
+    private function multiFieldsToArray(&$array): void
     {
+        $fields = ['attribute_range_value', 'time_range_value', 'job_range_value'];
         foreach ($fields as $field) {
             if (isset($array[$field])) {
                 $array[$field] = $this->jsonToArray($array[$field]);
@@ -171,5 +192,18 @@ class Auth extends Base implements AuthContract
     {
         $roleIds = $this->getRoleIds($userId);
         return $this->getKeys($roleIds);
+    }
+
+    public function getResourceField($ids): array
+    {
+        if (!$ids = array_values(array_unique(array_filter($ids)))) {
+            return [];
+        }
+
+        return DB::connection($this->connection)
+            ->table('resource')
+            ->whereIn('id', $ids)
+            ->pluck('field', 'id')
+            ->toArray();
     }
 }

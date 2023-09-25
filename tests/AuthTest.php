@@ -2,12 +2,16 @@
 
 namespace Bloom\Tests;
 
+use Bloom\Permission\Database\Auth;
+use Bloom\Permission\Enum\DataRangeTypeEnum;
+
 class AuthTest extends BaseTestCase
 {
     public function testGetKeys()
     {
         $result = app('permission.auth')->getKeys([2]);
 
+        dd(DataRangeTypeEnum::PART());
         $this->assertArrayHasKey('success', $result);
         $this->assertArrayHasKey('data', $result);
         $this->assertNotEmpty($result);
@@ -26,5 +30,17 @@ class AuthTest extends BaseTestCase
         $this->assertArrayHasKey('success', $result);
         $this->assertArrayHasKey('data', $result);
         $this->assertNotEmpty($result);
+    }
+
+    public function testGetUserPackageSetting()
+    {
+        $result = app('permission.auth')->getUserPackageSetting(1230058,7);
+    }
+
+    public function testGetResourceField()
+    {
+        $result = (new Auth())->getResourceField([1,2,0]);
+
+        dd($result);
     }
 }

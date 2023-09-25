@@ -13,7 +13,7 @@ class PermissionServiceProvider extends ServiceProvider
     public function boot()
     {
         // 配置
-        $this->mergeConfigFrom(realpath(__DIR__.'/../config/permission.php'), 'permission');
+        $this->mergeConfigFrom(realpath(__DIR__ . '/../config/permission.php'), 'permission');
 
         // 数据库配置
         $this->configureDatabase();
@@ -49,10 +49,10 @@ class PermissionServiceProvider extends ServiceProvider
      */
     protected function resolve(string $className)
     {
-        $driver    = \config('permission.driver');
-        $namespace = __NAMESPACE__.'\\'.ucfirst(strtolower($driver)).'\\';
+        $driver = \config('permission.driver');
+        $namespace = __NAMESPACE__ . '\\' . ucfirst(strtolower($driver)) . '\\';
 
-        $class = $namespace.ucfirst(Str::camel($className));
+        $class = $namespace . ucfirst(Str::camel($className));
 
         if (!class_exists($class)) {
             throw new RuntimeException("类不存在：{$class}");
@@ -68,6 +68,14 @@ class PermissionServiceProvider extends ServiceProvider
     {
         $this->app->bind('permission.auth', function () {
             return $this->resolve('auth');
+        });
+
+        $this->app->bind('permission.user', function () {
+            return $this->resolve('user');
+        });
+
+        $this->app->bind('permission.menu', function () {
+            return $this->resolve('menu');
         });
     }
 
