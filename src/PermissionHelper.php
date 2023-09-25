@@ -72,17 +72,23 @@ class PermissionHelper extends Service
 
         $this->builder->where(function ($query) use ($setting) {
             // 属性类
-            if ($setting['attribute_range_type'] === AttributeRangeTypeEnum::SPECIFY) {
+            if ($setting['attribute_range_type'] === AttributeRangeTypeEnum::SPECIFY
+                && $setting['attribute_resource_field']
+            ) {
                 $query->whereIn($setting['attribute_resource_field'], $setting['attribute_range_value']);
             }
 
             // 时间范围 绝对范围
-            if ($setting['time_range_type'] === TimeRangeTypeEnum::ABSOLUTE) {
+            if ($setting['time_range_type'] === TimeRangeTypeEnum::ABSOLUTE
+                && $setting['time_resource_field']
+            ) {
                 $query->whereBetween($setting['time_resource_field'], $setting['time_range_value']);
             }
 
             // 时间范围 相对范围
-            if ($setting['time_range_type'] === TimeRangeTypeEnum::RELATIVELY) {
+            if ($setting['time_range_type'] === TimeRangeTypeEnum::RELATIVELY
+                && $setting['time_resource_field']
+            ) {
                 $days = $setting['time_range_value'];
                 $today = Carbon::now()->toDateString();
                 $start = Carbon::now()->subDays($days)->toDateString();
@@ -91,12 +97,16 @@ class PermissionHelper extends Service
             }
 
             // 岗位范围 自己和下级
-            if ($setting['job_range_type'] === JobRangeTypeEnum::ONESELF_AND_UNDERLING) {
+            if ($setting['job_range_type'] === JobRangeTypeEnum::ONESELF_AND_UNDERLING
+                && $setting['job_resource_field']
+            ) {
                 $underlingUserIds = app('permission.user')->getUnderlings($this->userId);
                 $query->whereIn($setting['job_resource_field'], array_merge($underlingUserIds, [$this->userId]));
             }
 
-            if ($setting['job_range_type'] === JobRangeTypeEnum::SPECIFY) {
+            if ($setting['job_range_type'] === JobRangeTypeEnum::SPECIFY
+                && $setting['job_resource_field']
+            ) {
                 $query->whereIn($setting['job_resource_field'], $setting['job_range_value']);
             }
         });

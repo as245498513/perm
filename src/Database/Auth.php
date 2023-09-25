@@ -131,7 +131,7 @@ class Auth extends Base implements AuthContract
     {
         return DB::connection($this->connection)
             ->table('user_packages')->where('user_id', $userId)
-            ->value('package_id');
+            ->value('package_id') ?? 0;
     }
 
     private function isAdminRole($roleIds): bool
